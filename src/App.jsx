@@ -94,21 +94,23 @@ const ButterflyIcon = memo(({ bf, size = 52, flap = false, selected = false, del
 });
 
 // ─── Merging Butterfly Animation ───────────────────────────────────────────
+// ─── Merging Butterfly Animation ───────────────────────────────────────────
+// ─── Merging Butterfly Animation ───────────────────────────────────────────
+// ─── Merging Butterfly Animation ───────────────────────────────────────────
 function MergingButterfly({ bf, start1, start2, onDone }) {
-  const [phase, setPhase] = useState("merging"); // merging | joint | flying
+  const [phase, setPhase] = useState("merging"); // merging | exit
   const [pos, setPos] = useState({
     cx1: start1.x, cy1: start1.y,
     cx2: start2.x, cy2: start2.y,
     midX: (start1.x + start2.x) / 2,
     midY: (start1.y + start2.y) / 2
   });
-  const [flyPos, setFlyPos] = useState({ x: 0, y: 0, opacity: 1, scale: 1, rot: 0 });
+  const [exitParams, setExitParams] = useState({ opacity: 1, scale: 1, yOffset: 0 });
 
   useEffect(() => {
     let start = null;
     const mergeDuration = 500;
-    const jointDuration = 250;
-    const flyDuration = 1000;
+    const exitDuration = 900;
 
     function animate(ts) {
       if (!start) start = ts;
@@ -116,29 +118,25 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
 
       if (elapsed < mergeDuration) {
         const p = elapsed / mergeDuration;
-        const easeP = 1 - Math.pow(1 - p, 3); // easeOutCubic
+        const easeP = p * (2 - p);
+        const spiral = Math.sin(p * Math.PI * 2) * 25;
         setPos(current => ({
           ...current,
-          cx1: start1.x + (current.midX - start1.x) * easeP,
-          cy1: start1.y + (current.midY - start1.y) * easeP,
-          cx2: start2.x + (current.midX - start2.x) * easeP,
-          cy2: start2.y + (current.midY - start2.y) * easeP,
+          cx1: start1.x + (current.midX - start1.x) * easeP + spiral,
+          cy1: start1.y + (current.midY - start1.y) * easeP - spiral/2,
+          cx2: start2.x + (current.midX - start2.x) * easeP - spiral,
+          cy2: start2.y + (current.midY - start2.y) * easeP + spiral/2,
         }));
         requestAnimationFrame(animate);
-      } else if (elapsed < mergeDuration + jointDuration) {
-        if (phase !== "joint") setPhase("joint");
-        requestAnimationFrame(animate);
-      } else if (elapsed < mergeDuration + jointDuration + flyDuration) {
-        if (phase !== "flying") setPhase("flying");
-        const p = (elapsed - (mergeDuration + jointDuration)) / flyDuration;
-        const dx = (start1.x > start2.x ? 1 : -1) * 200 * p;
-        const dy = -250 * p;
-        setFlyPos({
-          x: pos.midX + dx,
-          y: pos.midY + dy,
-          opacity: 1 - p,
-          scale: 1 + p * 0.8,
-          rot: p * 45,
+      } else if (elapsed < mergeDuration + exitDuration) {
+        if (phase !== "exit") setPhase("exit");
+        const p = (elapsed - mergeDuration) / exitDuration;
+        // Joint phase is the first 300ms of exit
+        // Flying phase is the rest
+        setExitParams({
+          opacity: p < 0.3 ? 1 : 1 - (p - 0.3) / 0.7,
+          scale: p < 0.3 ? 1 : 1 + ((p - 0.3) / 0.7) * 2,
+          yOffset: p < 0.3 ? 0 : -((p - 0.3) / 0.7) * 80,
         });
         requestAnimationFrame(animate);
       } else {
@@ -146,40 +144,58 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
       }
     }
     requestAnimationFrame(animate);
-  }, [start1.x, start1.y, start2.x, start2.y, onDone]);
+  }, [start1.x, start1.y, start2.x, start2.y, onDone, phase]);
+
+  const petals = useRef(Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    angle: (i / 8) * Math.PI * 2,
+    dist: 45 + Math.random() * 40,
+    size: 7 + Math.random() * 5,
+    rot: Math.random() * 360,
+  }))).current;
 
   if (phase === "merging") {
+    const p = (pos.cx1 - start1.x) / (pos.midX - start1.x);
     return (
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999 }}>
-        <div style={{ position: "absolute", left: pos.cx1 - 26, top: pos.cy1 - 26 }}>
+        <div style={{ position: "absolute", left: pos.cx1 - 26, top: pos.cy1 - 26, transform: `rotate(${p * 180}deg)` }}>
           <ButterflyIcon bf={bf} size={52} wing="left" flap={true} />
         </div>
-        <div style={{ position: "absolute", left: pos.cx2 - 26, top: pos.cy2 - 26 }}>
+        <div style={{ position: "absolute", left: pos.cx2 - 26, top: pos.cy2 - 26, transform: `rotate(${-p * 180}deg)` }}>
           <ButterflyIcon bf={bf} size={52} wing="right" flap={true} />
         </div>
       </div>
     );
   }
 
-  if (phase === "joint") {
-    return (
-      <div style={{ position: "fixed", left: pos.midX - 40, top: pos.midY - 40, pointerEvents: "none", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ position: "absolute", width: 80, height: 80, background: "white", borderRadius: "50%", filter: "blur(20px)", opacity: 0.8, animation: "flash 0.25s ease-out" }} />
-        <ButterflyIcon bf={bf} size={80} wing="both" flap={true} />
-        <style>{`@keyframes flash { from { transform: scale(0); opacity: 1; } to { transform: scale(2); opacity: 0; } }`}</style>
-      </div>
-    );
-  }
-
+  // Single render for both join and fly (Exit Phase)
   return (
-    <div
-      style={{
-        position: "fixed", left: flyPos.x - 40, top: flyPos.y - 40,
-        opacity: flyPos.opacity, transform: `scale(${flyPos.scale}) rotate(${flyPos.rot}deg)`,
-        pointerEvents: "none", zIndex: 9999,
-      }}
-    >
-      <ButterflyIcon bf={bf} size={80} wing="both" flap={true} />
+    <div style={{ position: "fixed", left: pos.midX, top: pos.midY, pointerEvents: "none", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{`
+        @keyframes ripple { 0% { transform: scale(0.5); opacity: 1; border-width: 10px; } 100% { transform: scale(3.5); opacity: 0; border-width: 1px; } }
+        @keyframes petalOut { 0% { transform: translate(0,0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--dr)); opacity: 0; } }
+      `}</style>
+      
+      {/* Visual effects trigger only once at the start of exit */}
+      <div style={{ position: "absolute", width: 60, height: 60, border: `2px solid ${bf.mid}`, borderRadius: "50%", animation: "ripple 0.6s ease-out forwards" }} />
+      {petals.map(p => (
+        <div key={p.id} style={{
+          position: "absolute", width: p.size, height: p.size * 1.5, background: bf.top, borderRadius: "50% 0 50% 0",
+          opacity: 0.8,
+          "--dx": `${Math.cos(p.angle) * p.dist}px`,
+          "--dy": `${Math.sin(p.angle) * p.dist}px`,
+          "--dr": `${p.rot}deg`,
+          animation: `petalOut 0.9s ease-out forwards`,
+        }} />
+      ))}
+
+      {/* The butterfly icon moves and scales smoothly */}
+      <div style={{ 
+        transform: `translateY(${exitParams.yOffset}px) scale(${exitParams.scale})`,
+        opacity: exitParams.opacity 
+      }}>
+        <ButterflyIcon bf={bf} size={80} wing="both" flap={true} />
+      </div>
     </div>
   );
 }
@@ -567,6 +583,7 @@ export default function App() {
   const [level, setLevel] = useState(1);
   const [highScore, setHighScore] = useState(() => Number(localStorage.getItem("butterflyHighScore")) || 0);
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1000);
+  const [windowHeight, setWindowHeight] = useState(typeof window !== "undefined" ? window.innerHeight : 800);
 
   useEffect(() => {
     if (score > highScore) {
@@ -576,7 +593,10 @@ export default function App() {
   }, [score, highScore]);
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      setWindowHeight(window.innerHeight);
+    };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -880,7 +900,7 @@ export default function App() {
       setSelected([r, c]);
       setCombo(0);
     }
-  }, [scene, grid, selected, combo, totalPairs, spawnMergingButterfly, level]);
+  }, [scene, grid, selected, combo, totalPairs, spawnMergingButterfly, level, config.mode]);
 
   useEffect(() => {
     if (scene !== "game" || !grid.length) return;
