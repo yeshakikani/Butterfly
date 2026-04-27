@@ -123,9 +123,9 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
         setPos(current => ({
           ...current,
           cx1: start1.x + (current.midX - start1.x) * easeP + spiral,
-          cy1: start1.y + (current.midY - start1.y) * easeP - spiral/2,
+          cy1: start1.y + (current.midY - start1.y) * easeP - spiral / 2,
           cx2: start2.x + (current.midX - start2.x) * easeP - spiral,
-          cy2: start2.y + (current.midY - start2.y) * easeP + spiral/2,
+          cy2: start2.y + (current.midY - start2.y) * easeP + spiral / 2,
         }));
         requestAnimationFrame(animate);
       } else if (elapsed < mergeDuration + exitDuration) {
@@ -175,9 +175,9 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
         @keyframes ripple { 0% { transform: scale(0.5); opacity: 1; border-width: 10px; } 100% { transform: scale(3.5); opacity: 0; border-width: 1px; } }
         @keyframes petalOut { 0% { transform: translate(0,0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--dr)); opacity: 0; } }
       `}</style>
-      
+
       {/* Visual effects trigger only once at the start of exit */}
-      <div style={{ position: "absolute", width: 60, height: 60, border: `2px solid ${bf.mid}`, borderRadius: "50%", animation: "ripple 0.6s ease-out forwards" }} />
+      <div style={{ position: "absolute", width: 60, height: 60, borderRadius: "50%", background: `radial-gradient(circle, ${bf.mid}66 0%, transparent 70%)`, animation: "ripple 0.6s ease-out forwards" }} />
       {petals.map(p => (
         <div key={p.id} style={{
           position: "absolute", width: p.size, height: p.size * 1.5, background: bf.top, borderRadius: "50% 0 50% 0",
@@ -190,9 +190,9 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
       ))}
 
       {/* The butterfly icon moves and scales smoothly */}
-      <div style={{ 
+      <div style={{
         transform: `translateY(${exitParams.yOffset}px) scale(${exitParams.scale})`,
-        opacity: exitParams.opacity 
+        opacity: exitParams.opacity
       }}>
         <ButterflyIcon bf={bf} size={80} wing="both" flap={true} />
       </div>
@@ -349,14 +349,10 @@ function PathCanvas({ path, gridRef }) {
       ];
     }
 
-    // Yellow path line removed as requested
-    // ctx.strokeStyle = "rgba(255, 230, 50, 0.9)";
-    // ctx.lineWidth = 3.5;
-    // ...
-
+    // Path drawing removed as requested
     const timer = setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 600);
     return () => clearTimeout(timer);
-  }, [path]);
+  }, [path, gridRef]);
 
   return (
     <canvas
@@ -580,7 +576,7 @@ export default function App() {
   const [activePath, setActivePath] = useState(null);
   const [particles, setParticles] = useState([]);
   const [comboText, setComboText] = useState(null);
-  const [level, setLevel] = useState(1);
+  const [level, setLevel] = useState(() => Number(localStorage.getItem("butterflyLevel")) || 1);
   const [highScore, setHighScore] = useState(() => Number(localStorage.getItem("butterflyHighScore")) || 0);
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1000);
   const [windowHeight, setWindowHeight] = useState(typeof window !== "undefined" ? window.innerHeight : 800);
@@ -591,6 +587,10 @@ export default function App() {
       localStorage.setItem("butterflyHighScore", String(score));
     }
   }, [score, highScore]);
+
+  useEffect(() => {
+    localStorage.setItem("butterflyLevel", String(level));
+  }, [level]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -658,7 +658,15 @@ export default function App() {
     setScene("game");
   }, []);
 
-  const startGame = () => startLevel(1);
+  const startGame = () => {
+    // Optional: Reset level to 1 if they want to start over from Menu
+    // setLevel(1); 
+    // startLevel(1);
+    
+    // Based on user request "refresh ho tabhi 2 level ana chahiye", 
+    // we use the current (stored) level.
+    startLevel(level);
+  };
 
   const doShuffle = useCallback(() => {
     if (shuffles <= 0) return;
@@ -1218,7 +1226,7 @@ export default function App() {
                     border: cell.gone
                       ? "1.5px solid transparent"
                       : isSelected
-                        ? "2px solid rgba(255,255,255,0.9)"
+                        ? `2px solid ${bf.mid}`
                         : "1.5px solid rgba(150,120,255,0.3)",
                     opacity: cell.gone ? 0 : 1,
                     transform: isSelected ? "scale(1.1)" : "scale(1)",
@@ -1227,17 +1235,23 @@ export default function App() {
                       : isHint
                         ? "0 0 0 3px #FFD700, 0 0 16px rgba(255,215,0,0.6)"
                         : "none",
-                    transition: "transform 0.12s, opacity 0.25s, box-shadow 0.12s",
+                    transition: "transform 0.1s, opacity 0.25s, box-shadow 0.1s",
                     animation: isHint ? "hintPulse 0.6s ease-in-out 3" : "none",
                     pointerEvents: cell.gone ? "none" : "auto",
                     overflow: "hidden",
+                    touchAction: "manipulation", // Prevent zoom delay
+                    userSelect: "none",
+                    WebkitTapHighlightColor: "transparent",
                   }}
+                  onPointerDown={(e) => { e.currentTarget.style.transform = "scale(0.92)"; }}
+                  onPointerUp={(e) => { e.currentTarget.style.transform = isSelected ? "scale(1.1)" : "scale(1)"; }}
+                  onPointerLeave={(e) => { e.currentTarget.style.transform = isSelected ? "scale(1.1)" : "scale(1)"; }}
                 >
                   {!cell.gone && (
                     <ButterflyIcon
                       bf={bf}
-                      size={Math.min(isSmall ? 28 : 52, Math.floor((windowWidth - (isSmall ? 80 : 140)) / COLS))}
-                      flap={!isSelected}
+                      size={Math.min(isSmall ? 32 : 52, Math.floor((windowWidth - (isSmall ? 60 : 140)) / COLS))}
+                      flap={isSelected} // ONLY flap when selected for better performance
                       selected={isSelected}
                       delay={((r + c) % 4) * 0.15}
                     />
@@ -1266,8 +1280,10 @@ export default function App() {
         <button onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setScene("menu"); }} style={{
           background: "rgba(255,255,255,0.1)", color: "#AAC",
           border: "1px solid rgba(255,255,255,0.2)", borderRadius: 24,
-          padding: "6px 20px", fontSize: 13, cursor: "pointer",
+          padding: isSmall ? "10px 24px" : "6px 20px", fontSize: 13, cursor: "pointer",
           fontWeight: 600,
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
         }}>🏠 Menu</button>
         <span style={{ color: isSmall ? "#CCC" : "#445566", fontSize: 12, fontWeight: 600 }}>
           Combo: <span style={{ color: combo >= 2 ? "#FFD700" : (isSmall ? "#99A" : "#668899"), marginLeft: 4 }}>×{combo}</span>
