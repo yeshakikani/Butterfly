@@ -184,10 +184,26 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
   );
 }
 
+// ─── Level Configuration ───────────────────────────────────────────────────
+const LEVEL_CONFIG = {
+  1: { species: 6, time: 120, mode: "none", title: "Garden Meadow" },
+  2: { species: 7, time: 120, mode: "down", title: "Falling Petals" },
+  3: { species: 8, time: 120, mode: "up", title: "Ascending Skies" },
+  4: { species: 9, time: 120, mode: "left", title: "Western Coast" },
+  5: { species: 10, time: 120, mode: "right", title: "Eastern Shore" },
+  6: { species: 11, time: 120, mode: "split-h", title: "Divided Valley" },
+  7: { species: 12, time: 120, mode: "split-v", title: "Sky Split" },
+  8: { species: 12, time: 120, mode: "center-h", title: "Gravity Core" },
+  9: { species: 12, time: 120, mode: "center-v", title: "Vertical Pulse" },
+  10: { species: 12, time: 120, mode: "alternate", title: "Butterfly Storm" },
+};
+
 // ─── Game Grid Logic ──────────────────────────────────────────────────────────
 const COLS = 10, ROWS = 8;
 
-function buildGrid(bfCount = 12) {
+function buildGrid(level = 1) {
+  const config = LEVEL_CONFIG[level] || LEVEL_CONFIG[10];
+  const bfCount = config.species;
   const inner = [];
   for (let r = 1; r < ROWS - 1; r++)
     for (let c = 1; c < COLS - 1; c++)
@@ -531,7 +547,7 @@ const FloatingBg = memo(({ scene }) => {
 });
 
 // ─── Main Game ────────────────────────────────────────────────────────────────
-const TOTAL_TIME = 120;
+const DEFAULT_TOTAL_TIME = 120;
 
 export default function App() {
   const [scene, setScene] = useState("menu"); // menu | game | win | lose
@@ -541,7 +557,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_TOTAL_TIME);
   const [hints, setHints] = useState(3);
   const [shuffles, setShuffles] = useState(2);
   const [hintCells, setHintCells] = useState(null);
@@ -600,15 +616,19 @@ export default function App() {
     return () => clearInterval(timerRef.current);
   }, [scene]);
 
+  const config = LEVEL_CONFIG[level] || LEVEL_CONFIG[10];
+  const maxTime = config.time;
+
   const startLevel = useCallback((lvl = 1) => {
-    const { grid: g, totalPairs: tp } = buildGrid(12);
+    const { grid: g, totalPairs: tp } = buildGrid(lvl);
+    const lvlConfig = LEVEL_CONFIG[lvl] || LEVEL_CONFIG[10];
     setGrid(g);
     setTotalPairs(tp);
     setMatchedPairs(0);
     setSelected(null);
     setScore(s => (lvl === 1 ? 0 : s)); // Keep score for next levels
     setCombo(0);
-    setTimeLeft(TOTAL_TIME);
+    setTimeLeft(lvlConfig.time);
     setHints(prev => Math.max(3, prev));
     setShuffles(prev => Math.max(2, prev));
     setHintCells(null);
@@ -705,8 +725,11 @@ export default function App() {
           if (ng[r][c]) ng[r][c] = { ...ng[r][c], gone: true };
 
           // ── Board Shifting (Gravity) ──
-          // Level 2: Down, 3: Up, 4: Left, 5: Right, 6+: Alternate
-          const mode = level === 2 ? "down" : level === 3 ? "up" : level === 4 ? "left" : level === 5 ? "right" : level >= 6 ? (level % 2 === 0 ? "down" : "left") : "none";
+          let mode = config.mode;
+          if (mode === "alternate") {
+            const modes = ["down", "up", "left", "right", "split-h", "split-v"];
+            mode = modes[Math.floor(Math.random() * modes.length)];
+          }
 
           if (mode === "down") {
             for (let col = 0; col < COLS; col++) {
@@ -764,6 +787,78 @@ export default function App() {
                 }
               }
             }
+          } else if (mode === "split-h") {
+            // Top half Up, Bottom half Down
+            for (let col = 0; col < COLS; col++) {
+              // Top half (rows 0-3)
+              let wIdxTop = 0;
+              for (let r = 0; r < 4; r++) {
+                if (ng[r][col] && !ng[r][col].gone) {
+                  const t = ng[r][col]; ng[r][col] = null; ng[wIdxTop][col] = t; wIdxTop++;
+                } else if (ng[r][col]) ng[r][col] = null;
+              }
+              // Bottom half (rows 4-7)
+              let wIdxBot = ROWS - 1;
+              for (let r = ROWS - 1; r >= 4; r--) {
+                if (ng[r][col] && !ng[r][col].gone) {
+                  const t = ng[r][col]; ng[r][col] = null; ng[wIdxBot][col] = t; wIdxBot--;
+                } else if (ng[r][col]) ng[r][col] = null;
+              }
+            }
+          } else if (mode === "split-v") {
+            // Left half Left, Right half Right
+            for (let row = 0; row < ROWS; row++) {
+              // Left half (cols 0-4)
+              let wIdxLeft = 0;
+              for (let c = 0; c < 5; c++) {
+                if (ng[row][c] && !ng[row][c].gone) {
+                  const t = ng[row][c]; ng[row][c] = null; ng[row][wIdxLeft] = t; wIdxLeft++;
+                } else if (ng[row][c]) ng[row][c] = null;
+              }
+              // Right half (cols 5-9)
+              let wIdxRight = COLS - 1;
+              for (let c = COLS - 1; c >= 5; c--) {
+                if (ng[row][c] && !ng[row][c].gone) {
+                  const t = ng[row][c]; ng[row][c] = null; ng[row][wIdxRight] = t; wIdxRight--;
+                } else if (ng[row][c]) ng[row][c] = null;
+              }
+            }
+          } else if (mode === "center-h") {
+            // Towards middle columns (4 and 5)
+            for (let row = 0; row < ROWS; row++) {
+              // Left side towards col 4
+              let wIdxL = 4;
+              for (let c = 4; c >= 0; c--) {
+                if (ng[row][c] && !ng[row][c].gone) {
+                  const t = ng[row][c]; ng[row][c] = null; ng[row][wIdxL] = t; wIdxL--;
+                } else if (ng[row][c]) ng[row][c] = null;
+              }
+              // Right side towards col 5
+              let wIdxR = 5;
+              for (let c = 5; c < COLS; c++) {
+                if (ng[row][c] && !ng[row][c].gone) {
+                  const t = ng[row][c]; ng[row][c] = null; ng[row][wIdxR] = t; wIdxR++;
+                } else if (ng[row][c]) ng[row][c] = null;
+              }
+            }
+          } else if (mode === "center-v") {
+            // Towards middle rows (3 and 4)
+            for (let col = 0; col < COLS; col++) {
+              // Top side towards row 3
+              let wIdxT = 3;
+              for (let r = 3; r >= 0; r--) {
+                if (ng[r][col] && !ng[r][col].gone) {
+                  const t = ng[r][col]; ng[r][col] = null; ng[wIdxT][col] = t; wIdxT--;
+                } else if (ng[r][col]) ng[r][col] = null;
+              }
+              // Bottom side towards row 4
+              let wIdxB = 4;
+              for (let r = 4; r < ROWS; r++) {
+                if (ng[r][col] && !ng[r][col].gone) {
+                  const t = ng[r][col]; ng[r][col] = null; ng[wIdxB][col] = t; wIdxB++;
+                } else if (ng[r][col]) ng[r][col] = null;
+              }
+            }
           }
 
           return ng;
@@ -773,13 +868,13 @@ export default function App() {
           if (next >= totalPairs) {
             if (timerRef.current) clearInterval(timerRef.current);
             setTimeout(() => {
-              setLevel(l => l + 1);
               setScene("win");
             }, 500);
           }
           return next;
         });
-        setTimeLeft(prev => Math.min(TOTAL_TIME, prev + 5)); // Gain 5 seconds back
+        // Time bonus removed as requested
+
       }, 420);
     } else {
       setSelected([r, c]);
@@ -801,7 +896,7 @@ export default function App() {
   }, [grid, scene, shuffles, doShuffle]);
 
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-  const timePct = (timeLeft / TOTAL_TIME) * 100;
+  const timePct = (timeLeft / maxTime) * 100;
   const urgent = timeLeft <= 15;
 
   if (!isPortrait) return (
@@ -878,9 +973,9 @@ export default function App() {
           )}
 
           <div style={{ display: "flex", gap: 24, color: "#6699AA", fontSize: 13, marginTop: 12 }}>
-            <span>⏱ 2 min timer</span>
-            <span>💡 3 hints</span>
-            <span>🔀 2 shuffles</span>
+            <span>⏱ Variable Timer</span>
+            <span>💡 3+ Hints</span>
+            <span>🔀 2+ Shuffles</span>
           </div>
         </div>
       </div>
@@ -905,7 +1000,7 @@ export default function App() {
         <p style={{ color: "#668899", fontSize: 15, marginBottom: 32 }}>Pairs matched: {matchedPairs} / {totalPairs}</p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center" }}>
           {scene === "win" ? (
-            <button onClick={() => startLevel(level)} aria-label="Next Level" style={{
+            <button onClick={() => startLevel(level + 1)} aria-label="Next Level" style={{
               background: "linear-gradient(135deg, #10B981, #059669)", color: "white",
               border: "none", borderRadius: 40, padding: "14px 40px", fontSize: 18, fontWeight: 700,
               cursor: "pointer", boxShadow: "0 4px 20px rgba(16,185,129,0.5)",
@@ -977,7 +1072,7 @@ export default function App() {
 
         <div style={{ textAlign: "center", minWidth: isSmall ? 80 : 120 }}>
           <div style={{ fontSize: 8, color: "#88AACC", letterSpacing: 0.5, textTransform: "uppercase" }}> {
-            level === 1 ? "Garden Meadow" : level === 2 ? "Falling Petals" : level === 3 ? "Ascending Skies" : level === 4 ? "Western Coast" : level === 5 ? "Eastern Shore" : "Mystic Forest"
+            config.title
           }</div>
           <div style={{ fontSize: isSmall ? 16 : 22, fontWeight: 900, color: "#FFD700" }}>{score}</div>
         </div>
