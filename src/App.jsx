@@ -248,14 +248,14 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
 // ─── Level Configuration ───────────────────────────────────────────────────
 const LEVEL_CONFIG = {
   1: { species: 6, time: 120, mode: "none", title: "Score" },
-  2: { species: 7, time: 120, mode: "none", title: "Score" },
+  2: { species: 7, time: 120, mode: "alternate", title: "Score" },
   3: { species: 8, time: 120, mode: "up", title: "Score" },
   4: { species: 9, time: 120, mode: "left", title: "Score" },
   5: { species: 10, time: 120, mode: "right", title: "Score" },
-  6: { species: 11, time: 120, mode: "none", title: "Score" },
-  7: { species: 12, time: 120, mode: "right", title: "Score" },
-  8: { species: 12, time: 120, mode: "center-h", title: "Score" },
-  9: { species: 12, time: 120, mode: "center-v", title: "Score" },
+  6: { species: 11, time: 120, mode: "center-h", title: "Score" },
+  7: { species: 12, time: 120, mode: "center-v", title: "Score" },
+  8: { species: 12, time: 120, mode: "alternate-v", title: "Score" },
+  9: { species: 12, time: 120, mode: "random", title: "Score" },
   10: { species: 12, time: 120, mode: "alternate", title: "Score" },
 };
 
@@ -707,13 +707,7 @@ export default function App() {
   }, []);
 
   const startGame = () => {
-    // Optional: Reset level to 1 if they want to start over from Menu
-    // setLevel(1); 
-    // startLevel(1);
-
-    // Based on user request "refresh ho tabhi 2 level ana chahiye", 
-    // we use the current (stored) level.
-    startLevel(level);
+    setScene("levels");
   };
 
   const doShuffle = useCallback(() => {
@@ -935,6 +929,34 @@ export default function App() {
                 } else if (ng[r][col]) ng[r][col] = null;
               }
             }
+          } else if (mode === "alternate") {
+            // Even rows Left, Odd rows Right
+            for (let row = 0; row < ROWS; row++) {
+              const isEven = row % 2 === 0;
+              let writeIdx = isEven ? 0 : COLS - 1;
+              const step = isEven ? 1 : -1;
+              const start = isEven ? 0 : COLS - 1;
+              const end = isEven ? COLS : -1;
+              for (let col = start; col !== end; col += step) {
+                if (ng[row][col] && !ng[row][col].gone) {
+                  const t = ng[row][col]; ng[row][col] = null; ng[row][writeIdx] = t; writeIdx += step;
+                } else if (ng[row][col]) ng[row][col] = null;
+              }
+            }
+          } else if (mode === "alternate-v") {
+            // Even cols Up, Odd cols Down
+            for (let col = 0; col < COLS; col++) {
+              const isEven = col % 2 === 0;
+              let writeIdx = isEven ? 0 : ROWS - 1;
+              const step = isEven ? 1 : -1;
+              const start = isEven ? 0 : ROWS - 1;
+              const end = isEven ? ROWS : -1;
+              for (let row = start; row !== end; row += step) {
+                if (ng[row][col] && !ng[row][col].gone) {
+                  const t = ng[row][col]; ng[row][col] = null; ng[writeIdx][col] = t; writeIdx += step;
+                } else if (ng[row][col]) ng[row][col] = null;
+              }
+            }
           }
 
           return ng;
@@ -945,6 +967,9 @@ export default function App() {
             if (timerRef.current) clearInterval(timerRef.current);
             setTimeout(() => {
               setScene("win");
+              const nextLvl = level + 1;
+              const highest = Number(localStorage.getItem("butterflyLevel")) || 1;
+              if (nextLvl > highest) localStorage.setItem("butterflyLevel", nextLvl);
             }, 500);
           }
           return next;
@@ -1054,6 +1079,65 @@ export default function App() {
             <span>🔀 2+ Shuffles</span>
           </div>
         </div>
+      </div>
+    </div>
+  );
+  if (scene === "levels") return (
+    <div style={{
+      width: "100vw", height: "100vh", overflow: "hidden",
+      background: "transparent",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      fontFamily: "'Georgia', serif", position: "relative",
+    }}>
+      <FloatingBg scene="levels" />
+      <div style={{ position: "relative", zIndex: 10, textAlign: "center", width: "min(90vw, 600px)", animation: "fadeSlide 0.6s ease" }}>
+        <h2 style={{
+          fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 900,
+          color: "white", marginBottom: 32,
+          textShadow: "0 0 20px rgba(150, 120, 255, 0.6)",
+        }}>Select Level</h2>
+        
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: isSmall ? 12 : 20,
+          marginBottom: 40
+        }}>
+          {Object.keys(LEVEL_CONFIG).map(lvl => {
+            const num = Number(lvl);
+            const isUnlocked = num <= (Number(localStorage.getItem("butterflyLevel")) || 1);
+            return (
+              <button
+                key={lvl}
+                onClick={() => startLevel(num)}
+                style={{
+                  width: isSmall ? 52 : 72, height: isSmall ? 52 : 72,
+                  borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)",
+                  background: isUnlocked 
+                    ? "linear-gradient(135deg, #6D28D9, #4F46E5)" 
+                    : "rgba(255,255,255,0.05)",
+                  color: isUnlocked ? "white" : "rgba(255,255,255,0.3)",
+                  fontSize: isSmall ? 18 : 24, fontWeight: 900,
+                  cursor: "pointer", transition: "all 0.2s",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: isUnlocked ? "0 4px 15px rgba(109,40,217,0.4)" : "none",
+                  opacity: isUnlocked ? 1 : 0.7,
+                }}
+                onMouseEnter={(e) => { if(isUnlocked) e.currentTarget.style.transform = "scale(1.1)"; }}
+                onMouseLeave={(e) => { if(isUnlocked) e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                {num}
+              </button>
+            );
+          })}
+        </div>
+
+        <button 
+          onClick={() => setScene("menu")}
+          style={{
+            background: "rgba(255,255,255,0.1)", color: "#AAC",
+            border: "1px solid rgba(255,255,255,0.2)", borderRadius: 40,
+            padding: "12px 32px", fontSize: 16, fontWeight: 600, cursor: "pointer"
+          }}
+        >🏠 Back to Menu</button>
       </div>
     </div>
   );
