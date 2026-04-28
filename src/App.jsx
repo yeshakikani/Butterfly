@@ -248,14 +248,14 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
 // ─── Level Configuration ───────────────────────────────────────────────────
 const LEVEL_CONFIG = {
   1: { species: 6, time: 120, mode: "none", title: "Score" },
-  2: { species: 7, time: 120, mode: "alternate", title: "Score" },
+  2: { species: 7, time: 120, mode: "down", title: "Score" },
   3: { species: 8, time: 120, mode: "up", title: "Score" },
   4: { species: 9, time: 120, mode: "left", title: "Score" },
   5: { species: 10, time: 120, mode: "right", title: "Score" },
-  6: { species: 11, time: 120, mode: "center-h", title: "Score" },
-  7: { species: 12, time: 120, mode: "center-v", title: "Score" },
-  8: { species: 12, time: 120, mode: "alternate-v", title: "Score" },
-  9: { species: 12, time: 120, mode: "random", title: "Score" },
+  6: { species: 11, time: 120, mode: "split-h", title: "Score" },
+  7: { species: 12, time: 120, mode: "split-v", title: "Score" },
+  8: { species: 12, time: 120, mode: "center-h", title: "Score" },
+  9: { species: 12, time: 120, mode: "center-v", title: "Score" },
   10: { species: 12, time: 120, mode: "alternate", title: "Score" },
 };
 
@@ -927,34 +927,6 @@ export default function App() {
                 if (ng[r][col] && !ng[r][col].gone) {
                   const t = ng[r][col]; ng[r][col] = null; ng[wIdxB][col] = t; wIdxB++;
                 } else if (ng[r][col]) ng[r][col] = null;
-              }
-            }
-          } else if (mode === "alternate") {
-            // Even rows Left, Odd rows Right
-            for (let row = 0; row < ROWS; row++) {
-              const isEven = row % 2 === 0;
-              let writeIdx = isEven ? 0 : COLS - 1;
-              const step = isEven ? 1 : -1;
-              const start = isEven ? 0 : COLS - 1;
-              const end = isEven ? COLS : -1;
-              for (let col = start; col !== end; col += step) {
-                if (ng[row][col] && !ng[row][col].gone) {
-                  const t = ng[row][col]; ng[row][col] = null; ng[row][writeIdx] = t; writeIdx += step;
-                } else if (ng[row][col]) ng[row][col] = null;
-              }
-            }
-          } else if (mode === "alternate-v") {
-            // Even cols Up, Odd cols Down
-            for (let col = 0; col < COLS; col++) {
-              const isEven = col % 2 === 0;
-              let writeIdx = isEven ? 0 : ROWS - 1;
-              const step = isEven ? 1 : -1;
-              const start = isEven ? 0 : ROWS - 1;
-              const end = isEven ? ROWS : -1;
-              for (let row = start; row !== end; row += step) {
-                if (ng[row][col] && !ng[row][col].gone) {
-                  const t = ng[row][col]; ng[row][col] = null; ng[writeIdx][col] = t; writeIdx += step;
-                } else if (ng[row][col]) ng[row][col] = null;
               }
             }
           }
