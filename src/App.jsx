@@ -248,7 +248,7 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
 // ─── Level Configuration ───────────────────────────────────────────────────
 const LEVEL_CONFIG = {
   1: { species: 6, time: 120, mode: "none", title: "Score" },
-  2: { species: 7, time: 120, mode: "down", title: "Score" },
+  2: { species: 7, time: 120, mode: "none", title: "Score" },
   3: { species: 8, time: 120, mode: "up", title: "Score" },
   4: { species: 9, time: 120, mode: "left", title: "Score" },
   5: { species: 10, time: 120, mode: "right", title: "Score" },
