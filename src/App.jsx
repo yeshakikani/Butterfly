@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 
 // ─── Butterfly Designs (12 unique species) ───────────────────────────────────
 const BUTTERFLIES = [
@@ -25,7 +25,7 @@ const ButterflyIcon = memo(({ bf, size = 52, flap = false, selected = false, del
   const showRight = wing === "both" || wing === "right";
 
   return (
-    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} xmlns="http://www.w3.org/2000/svg" style={{ transition: "all 0.3s ease" }}>
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} xmlns="http://www.w3.org/2000/svg" style={{ transition: "all 0.3s ease", overflow: "visible" }}>
       <defs>
         <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="2" result="blur" />
@@ -37,14 +37,14 @@ const ButterflyIcon = memo(({ bf, size = 52, flap = false, selected = false, del
         <path
           d={`M${cx} ${cy} Q${cx - 18} ${cy - 16} ${cx - 22} ${cy - 5} Q${cx - 24} ${cy + 2} ${cx} ${cy}`}
           fill={bf.top} opacity="0.95"
-          style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapLeft 0.4s ease-in-out infinite alternate" : "none", animationDelay: `${delay}s` }}
+          style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapLeft 0.25s ease-in-out infinite alternate, shimmer 2s infinite ease-in-out" : "none", animationDelay: `${delay}s` }}
         />
       )}
       {showRight && (
         <path
           d={`M${cx} ${cy} Q${cx + 18} ${cy - 16} ${cx + 22} ${cy - 5} Q${cx + 24} ${cy + 2} ${cx} ${cy}`}
           fill={bf.top} opacity="0.95"
-          style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapRight 0.4s ease-in-out infinite alternate" : "none", animationDelay: `${delay}s` }}
+          style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapRight 0.25s ease-in-out infinite alternate, shimmer 2s infinite ease-in-out" : "none", animationDelay: `${delay}s` }}
         />
       )}
       {/* Lower wings */}
@@ -52,38 +52,50 @@ const ButterflyIcon = memo(({ bf, size = 52, flap = false, selected = false, del
         <path
           d={`M${cx} ${cy} Q${cx - 14} ${cy + 10} ${cx - 16} ${cy + 20} Q${cx - 10} ${cy + 26} ${cx} ${cy}`}
           fill={bf.mid} opacity="0.9"
-          style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapLeft 0.5s ease-in-out infinite alternate" : "none", animationDelay: `${delay}s` }}
+          style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapLeft 0.3s ease-in-out infinite alternate, shimmer 3s infinite ease-in-out" : "none", animationDelay: `${delay}s` }}
         />
       )}
       {showRight && (
         <path
           d={`M${cx} ${cy} Q${cx + 14} ${cy + 10} ${cx + 16} ${cy + 20} Q${cx + 10} ${cy + 26} ${cx} ${cy}`}
           fill={bf.mid} opacity="0.9"
-          style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapRight 0.5s ease-in-out infinite alternate" : "none", animationDelay: `${delay}s` }}
+          style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapRight 0.3s ease-in-out infinite alternate, shimmer 3s infinite ease-in-out" : "none", animationDelay: `${delay}s` }}
         />
       )}
       {/* Wing patterns */}
       {showLeft && (
-        <>
+        <g style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapLeft 0.25s ease-in-out infinite alternate" : "none", animationDelay: `${delay}s` }}>
           <circle cx={cx - 15} cy={cy - 7} r="3.5" fill={bf.bot} opacity="0.75" />
           <circle cx={cx - 12} cy={cy - 1} r="2" fill="white" opacity="0.35" />
-        </>
+        </g>
       )}
       {showRight && (
-        <>
+        <g style={{ transformOrigin: `${cx}px ${cy}px`, animation: flap ? "flapRight 0.25s ease-in-out infinite alternate" : "none", animationDelay: `${delay}s` }}>
           <circle cx={cx + 15} cy={cy - 7} r="3.5" fill={bf.bot} opacity="0.75" />
           <circle cx={cx + 12} cy={cy - 1} r="2" fill="white" opacity="0.35" />
-        </>
+        </g>
       )}
-      {/* Body */}
-      <ellipse cx={cx} cy={cy + 1} rx={wing === "both" ? 2.2 : 1.1} ry="9" fill={bf.body} />
-      {wing === "both" && <circle cx={cx} cy={cy - 9} r="3" fill={bf.body} />}
 
-      {/* Antennae */}
-      {showLeft && <line x1={cx - 1} y1={cy - 10} x2={cx - 7} y2={cy - 18} stroke={bf.antenna} strokeWidth="1.2" />}
-      {showRight && <line x1={cx + 1} y1={cy - 10} x2={cx + 7} y2={cy - 18} stroke={bf.antenna} strokeWidth="1.2" />}
-      {showLeft && <circle cx={cx - 7} cy={cy - 19} r="1.5" fill={bf.antenna} />}
-      {showRight && <circle cx={cx + 7} cy={cy - 19} r="1.5" fill={bf.antenna} />}
+      {/* Body Group with Bobbing */}
+      <g style={{ animation: flap ? "bodyBob 0.5s ease-in-out infinite alternate" : "none" }}>
+        {/* Body */}
+        <ellipse cx={cx} cy={cy + 1} rx={wing === "both" ? 2.2 : 1.1} ry="9" fill={bf.body} />
+        {wing === "both" && <circle cx={cx} cy={cy - 9} r="3" fill={bf.body} />}
+
+        {/* Antennae with Wiggle */}
+        {showLeft && (
+          <g style={{ transformOrigin: `${cx}px ${cy - 10}px`, animation: flap ? "antennaWiggle 0.6s ease-in-out infinite alternate" : "none" }}>
+            <line x1={cx - 1} y1={cy - 10} x2={cx - 7} y2={cy - 18} stroke={bf.antenna} strokeWidth="1.2" />
+            <circle cx={cx - 7} cy={cy - 19} r="1.5" fill={bf.antenna} />
+          </g>
+        )}
+        {showRight && (
+          <g style={{ transformOrigin: `${cx}px ${cy - 10}px`, animation: flap ? "antennaWiggle 0.6s ease-in-out infinite alternate-reverse" : "none" }}>
+            <line x1={cx + 1} y1={cy - 10} x2={cx + 7} y2={cy - 18} stroke={bf.antenna} strokeWidth="1.2" />
+            <circle cx={cx + 7} cy={cy - 19} r="1.5" fill={bf.antenna} />
+          </g>
+        )}
+      </g>
 
       {/* Selected glow */}
       {selected && (
@@ -154,10 +166,33 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
     rot: Math.random() * 360,
   }))).current;
 
+  const trails = useRef(Array.from({ length: 6 }, (_, i) => ({ id: i, delay: i * 0.08 }))).current;
+  const sparkles = useRef(Array.from({ length: 12 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 80 - 40,
+    y: Math.random() * 80 - 40,
+    size: 2 + Math.random() * 4,
+    delay: Math.random() * 0.5,
+  }))).current;
+
   if (phase === "merging") {
     const p = (pos.cx1 - start1.x) / (pos.midX - start1.x);
     return (
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999 }}>
+        {trails.map(t => (
+          <React.Fragment key={t.id}>
+            <div style={{
+              position: "absolute", left: pos.cx1 - 10, top: pos.cy1 - 10, width: 20, height: 20,
+              background: bf.top, borderRadius: "50%", opacity: 0.3, filter: "blur(4px)",
+              transform: `scale(${1 - t.delay * 2})`,
+            }} />
+            <div style={{
+              position: "absolute", left: pos.cx2 - 10, top: pos.cy2 - 10, width: 20, height: 20,
+              background: bf.mid, borderRadius: "50%", opacity: 0.3, filter: "blur(4px)",
+              transform: `scale(${1 - t.delay * 2})`,
+            }} />
+          </React.Fragment>
+        ))}
         <div style={{ position: "absolute", left: pos.cx1 - 26, top: pos.cy1 - 26, transform: `rotate(${p * 180}deg)` }}>
           <ButterflyIcon bf={bf} size={52} wing="left" flap={true} />
         </div>
@@ -173,8 +208,18 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
     <div style={{ position: "fixed", left: pos.midX, top: pos.midY, pointerEvents: "none", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{`
         @keyframes ripple { 0% { transform: scale(0.5); opacity: 1; border-width: 10px; } 100% { transform: scale(3.5); opacity: 0; border-width: 1px; } }
-        @keyframes petalOut { 0% { transform: translate(0,0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--dr)); opacity: 0; } }
+        @keyframes petalOut { 0% { transform: translate(0,0) rotate(0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--dr)) scale(0.5); opacity: 0; } }
+        @keyframes sparkle { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.5) rotate(180deg); opacity: 0; } }
       `}</style>
+
+      {/* Sparkles */}
+      {sparkles.map(s => (
+        <div key={s.id} style={{
+          position: "absolute", left: s.x, top: s.y, width: s.size, height: s.size,
+          background: "white", borderRadius: "50%", boxShadow: `0 0 8px 2px ${bf.top}`,
+          animation: `sparkle 0.6s ease-out forwards`, animationDelay: `${s.delay}s`
+        }} />
+      ))}
 
       {/* Visual effects trigger only once at the start of exit */}
       <div style={{ position: "absolute", width: 60, height: 60, borderRadius: "50%", background: `radial-gradient(circle, ${bf.mid}66 0%, transparent 70%)`, animation: "ripple 0.6s ease-out forwards" }} />
@@ -202,16 +247,16 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
 
 // ─── Level Configuration ───────────────────────────────────────────────────
 const LEVEL_CONFIG = {
-  1: { species: 6, time: 120, mode: "none", title: "Garden Meadow" },
-  2: { species: 7, time: 120, mode: "down", title: "Falling Petals" },
-  3: { species: 8, time: 120, mode: "up", title: "Ascending Skies" },
-  4: { species: 9, time: 120, mode: "left", title: "Western Coast" },
-  5: { species: 10, time: 120, mode: "right", title: "Eastern Shore" },
-  6: { species: 11, time: 120, mode: "split-h", title: "Divided Valley" },
-  7: { species: 12, time: 120, mode: "split-v", title: "Sky Split" },
-  8: { species: 12, time: 120, mode: "center-h", title: "Gravity Core" },
-  9: { species: 12, time: 120, mode: "center-v", title: "Vertical Pulse" },
-  10: { species: 12, time: 120, mode: "alternate", title: "Butterfly Storm" },
+  1: { species: 6, time: 120, mode: "none", title: "Score" },
+  2: { species: 7, time: 120, mode: "down", title: "Score" },
+  3: { species: 8, time: 120, mode: "up", title: "Score" },
+  4: { species: 9, time: 120, mode: "left", title: "Score" },
+  5: { species: 10, time: 120, mode: "right", title: "Score" },
+  6: { species: 11, time: 120, mode: "split-h", title: "Score" },
+  7: { species: 12, time: 120, mode: "split-v", title: "Score" },
+  8: { species: 12, time: 120, mode: "center-h", title: "Score" },
+  9: { species: 12, time: 120, mode: "center-v", title: "Score" },
+  10: { species: 12, time: 120, mode: "alternate", title: "Score" },
 };
 
 // ─── Game Grid Logic ──────────────────────────────────────────────────────────
@@ -408,18 +453,21 @@ const NatureBackground = memo(({ scene }) => {
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
       <style>{`
-        @keyframes flapLeft { from { transform: rotateY(0deg); } to { transform: rotateY(45deg); } }
-        @keyframes flapRight { from { transform: rotateY(0deg); } to { transform: rotateY(-45deg); } }
+        @keyframes flapLeft { 0% { transform: rotateY(0deg) skewY(0deg); } 100% { transform: rotateY(70deg) skewY(-5deg); } }
+        @keyframes flapRight { 0% { transform: rotateY(0deg) skewY(0deg); } 100% { transform: rotateY(-70deg) skewY(5deg); } }
+        @keyframes bodyBob { 0% { transform: translateY(0px); } 100% { transform: translateY(-2px); } }
+        @keyframes antennaWiggle { 0% { transform: rotate(-5deg); } 100% { transform: rotate(10deg); } }
         @keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(calc(100vw + 200px)); } }
         @keyframes blinkStar { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; transform: scale(1.1); } }
         @keyframes flyBug { 
-          0% { transform: translate(0,0); }
-          25% { transform: translate(30px, -20px); }
-          50% { transform: translate(-20px, -40px); }
-          75% { transform: translate(20px, -10px); }
-          100% { transform: translate(0,0); }
+          0% { transform: translate(0,0) rotate(0deg); }
+          25% { transform: translate(40px, -30px) rotate(5deg); }
+          50% { transform: translate(-30px, -60px) rotate(-5deg); }
+          75% { transform: translate(30px, -20px) rotate(3deg); }
+          100% { transform: translate(0,0) rotate(0deg); }
         }
         @keyframes blinkFly { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        @keyframes shimmer { 0% { filter: brightness(1); } 50% { filter: brightness(1.3) contrast(1.1); } 100% { filter: brightness(1); } }
       `}</style>
       {/* Sky */}
       <div style={{ position: "absolute", inset: 0, background: skyGrad }} />
@@ -646,7 +694,7 @@ export default function App() {
     setTotalPairs(tp);
     setMatchedPairs(0);
     setSelected(null);
-    setScore(s => (lvl === 1 ? 0 : s)); // Keep score for next levels
+    setScore(0); // Reset score for every level
     setCombo(0);
     setTimeLeft(lvlConfig.time);
     setHints(prev => Math.max(3, prev));
@@ -662,7 +710,7 @@ export default function App() {
     // Optional: Reset level to 1 if they want to start over from Menu
     // setLevel(1); 
     // startLevel(1);
-    
+
     // Based on user request "refresh ho tabhi 2 level ana chahiye", 
     // we use the current (stored) level.
     startLevel(level);
@@ -1107,7 +1155,7 @@ export default function App() {
 
         {!isMini && (
           <div style={{ flex: 1, maxWidth: isSmall ? 80 : 180 }}>
-            <div style={{ fontSize: 9, color: "#88AACC", textAlign: "center", marginBottom: isSmall ? 2 : 4 }}>
+            <div style={{ fontSize: 18, color: "#88AACC", textAlign: "center", marginBottom: isSmall ? 2 : 4 }}>
               {matchedPairs}/{totalPairs}
             </div>
             <div style={{ height: isSmall ? 4 : 6, background: "rgba(255,255,255,0.15)", borderRadius: 4, overflow: "hidden" }}>
@@ -1151,7 +1199,7 @@ export default function App() {
           justifyContent: "center", transition: "transform 0.12s", flexShrink: 0,
           position: "relative",
         }}>
-          {isSmall ? "💡" : <>💡<span style={{ fontSize: 8 }}>HINT</span></>}
+          {isSmall ? "💡" : <>💡<span style={{ fontSize: 12 }}>HINT</span></>}
           <div style={{
             position: "absolute", top: -4, right: -4, background: "#FF6B35", color: "white",
             borderRadius: "50%", width: isSmall ? 14 : 18, height: isSmall ? 14 : 18, fontSize: isSmall ? 9 : 11, fontWeight: 700,
@@ -1168,7 +1216,11 @@ export default function App() {
           justifyContent: "center", transition: "transform 0.12s", flexShrink: 0,
           position: "relative",
         }}>
-          {isSmall ? "🔀" : <>🔀<span style={{ fontSize: 8 }}>MIX</span></>}
+          {isSmall ? "🔀" : <>🔀<span style={{
+            fontSize: 12
+
+
+          }}>MIX</span></>}
           <div style={{
             position: "absolute", top: -4, right: -4, background: "#FF6B35", color: "white",
             borderRadius: "50%", width: isSmall ? 14 : 18, height: isSmall ? 14 : 18, fontSize: isSmall ? 9 : 11, fontWeight: 700,
@@ -1270,12 +1322,12 @@ export default function App() {
         zIndex: 100,
         marginTop: isSmall ? 0 : 8,
         display: "flex", gap: 12, alignItems: "center",
-        background: isSmall ? "rgba(0,0,0,0.55)" : "transparent",
+        background: "transparent",
         padding: isSmall ? "10px 24px" : 0,
         borderRadius: isSmall ? 40 : 0,
-        border: isSmall ? "1px solid rgba(100,100,255,0.2)" : "none",
-        backdropFilter: isSmall ? "blur(12px)" : "none",
-        boxShadow: isSmall ? "0 8px 32px rgba(0,0,0,0.4)" : "none",
+        border: "none",
+        backdropFilter: "none",
+        boxShadow: "none",
       }}>
         <button onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setScene("menu"); }} style={{
           background: "rgba(255,255,255,0.15)", color: "white",
@@ -1286,14 +1338,14 @@ export default function App() {
           WebkitTapHighlightColor: "transparent",
           boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
         }}>🏠 Menu</button>
-        <div style={{ 
-          background: "rgba(0,0,0,0.3)", padding: "8px 20px", borderRadius: 24,
+        <div style={{
+          background: "transparent", padding: "8px 10px", borderRadius: 24,
           display: "flex", alignItems: "center", gap: 8,
-          border: "1px solid rgba(255,255,255,0.1)"
+          border: "none"
         }}>
           <span style={{ color: "#AAF", fontSize: 15, fontWeight: 700 }}>Combo:</span>
-          <span style={{ 
-            color: combo >= 2 ? "#FFD700" : "#FFF", 
+          <span style={{
+            color: combo >= 2 ? "#FFD700" : "#FFF",
             fontSize: 20, fontWeight: 900,
             textShadow: combo >= 2 ? "0 0 10px rgba(255,215,0,0.5)" : "none"
           }}>×{combo}</span>
