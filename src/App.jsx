@@ -1278,16 +1278,26 @@ export default function App() {
         boxShadow: isSmall ? "0 8px 32px rgba(0,0,0,0.4)" : "none",
       }}>
         <button onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setScene("menu"); }} style={{
-          background: "rgba(255,255,255,0.1)", color: "#AAC",
-          border: "1px solid rgba(255,255,255,0.2)", borderRadius: 24,
-          padding: isSmall ? "10px 24px" : "6px 20px", fontSize: 13, cursor: "pointer",
-          fontWeight: 600,
+          background: "rgba(255,255,255,0.15)", color: "white",
+          border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 30,
+          padding: isSmall ? "12px 32px" : "10px 28px", fontSize: 16, cursor: "pointer",
+          fontWeight: 700,
           touchAction: "manipulation",
           WebkitTapHighlightColor: "transparent",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
         }}>🏠 Menu</button>
-        <span style={{ color: isSmall ? "#CCC" : "#445566", fontSize: 12, fontWeight: 600 }}>
-          Combo: <span style={{ color: combo >= 2 ? "#FFD700" : (isSmall ? "#99A" : "#668899"), marginLeft: 4 }}>×{combo}</span>
-        </span>
+        <div style={{ 
+          background: "rgba(0,0,0,0.3)", padding: "8px 20px", borderRadius: 24,
+          display: "flex", alignItems: "center", gap: 8,
+          border: "1px solid rgba(255,255,255,0.1)"
+        }}>
+          <span style={{ color: "#AAF", fontSize: 15, fontWeight: 700 }}>Combo:</span>
+          <span style={{ 
+            color: combo >= 2 ? "#FFD700" : "#FFF", 
+            fontSize: 20, fontWeight: 900,
+            textShadow: combo >= 2 ? "0 0 10px rgba(255,215,0,0.5)" : "none"
+          }}>×{combo}</span>
+        </div>
       </div>
     </div>
   );
