@@ -1193,38 +1193,40 @@ export default function App() {
         <button onClick={useHint} disabled={hints <= 0} aria-label={`Use Hint (${hints} left)`} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 0,
           background: hints > 0 ? "linear-gradient(135deg,#1E6FB5,#1A5A96)" : "rgba(50,50,80,0.5)",
-          border: `1.5px solid ${hints > 0 ? "#4FA8DD" : "#335"}`,
-          borderRadius: "50%", width: isSmall ? 36 : 52, height: isSmall ? 36 : 52, cursor: hints > 0 ? "pointer" : "not-allowed",
+          border: `2px solid ${hints > 0 ? "#4FA8DD" : "#335"}`,
+          borderRadius: "50%", width: isSmall ? 52 : 64, height: isSmall ? 52 : 64, cursor: hints > 0 ? "pointer" : "not-allowed",
           color: "white", fontSize: 8, fontWeight: 700,
           justifyContent: "center", transition: "transform 0.12s", flexShrink: 0,
           position: "relative",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
         }}>
-          {isSmall ? "💡" : <>💡<span style={{ fontSize: 12 }}>HINT</span></>}
+          {isSmall ? <span style={{ fontSize: 24 }}>💡</span> : <><span style={{ fontSize: 28 }}>💡</span><span style={{ fontSize: 13, marginTop: -2 }}>HINT</span></>}
           <div style={{
-            position: "absolute", top: -4, right: -4, background: "#FF6B35", color: "white",
-            borderRadius: "50%", width: isSmall ? 14 : 18, height: isSmall ? 14 : 18, fontSize: isSmall ? 9 : 11, fontWeight: 700,
-            display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid white",
+            position: "absolute", top: -5, right: -5, background: "#FF6B35", color: "white",
+            borderRadius: "50%", width: isSmall ? 20 : 24, height: isSmall ? 20 : 24, fontSize: isSmall ? 12 : 14, fontWeight: 900,
+            display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid white",
+            boxShadow: "0 2px 5px rgba(0,0,0,0.4)",
           }}>{hints}</div>
         </button>
 
         <button onClick={doShuffle} disabled={shuffles <= 0} aria-label={`Shuffle Grid (${shuffles} left)`} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 0,
           background: shuffles > 0 ? "linear-gradient(135deg,#1E6FB5,#1A5A96)" : "rgba(50,50,80,0.5)",
-          border: `1.5px solid ${shuffles > 0 ? "#4FA8DD" : "#335"}`,
-          borderRadius: "50%", width: isSmall ? 36 : 52, height: isSmall ? 36 : 52, cursor: shuffles > 0 ? "pointer" : "not-allowed",
+          border: `2px solid ${shuffles > 0 ? "#4FA8DD" : "#335"}`,
+          borderRadius: "50%", width: isSmall ? 52 : 64, height: isSmall ? 52 : 64, cursor: shuffles > 0 ? "pointer" : "not-allowed",
           color: "white", fontSize: 8, fontWeight: 700,
           justifyContent: "center", transition: "transform 0.12s", flexShrink: 0,
           position: "relative",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
         }}>
-          {isSmall ? "🔀" : <>🔀<span style={{
-            fontSize: 12
-
-
+          {isSmall ? <span style={{ fontSize: 24 }}>🔀</span> : <><span style={{ fontSize: 28 }}>🔀</span><span style={{
+            fontSize: 13, marginTop: -2
           }}>MIX</span></>}
           <div style={{
-            position: "absolute", top: -4, right: -4, background: "#FF6B35", color: "white",
-            borderRadius: "50%", width: isSmall ? 14 : 18, height: isSmall ? 14 : 18, fontSize: isSmall ? 9 : 11, fontWeight: 700,
-            display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid white",
+            position: "absolute", top: -5, right: -5, background: "#FF6B35", color: "white",
+            borderRadius: "50%", width: isSmall ? 20 : 24, height: isSmall ? 20 : 24, fontSize: isSmall ? 12 : 14, fontWeight: 900,
+            display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid white",
+            boxShadow: "0 2px 5px rgba(0,0,0,0.4)",
           }}>{shuffles}</div>
         </button>
       </div>
