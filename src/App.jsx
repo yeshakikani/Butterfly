@@ -1079,24 +1079,33 @@ export default function App() {
             return (
               <button
                 key={lvl}
-                onClick={() => startLevel(num)}
+                onClick={() => isUnlocked && startLevel(num)}
                 style={{
                   width: isSmall ? 52 : 72, height: isSmall ? 52 : 72,
-                  borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)",
+                  borderRadius: "50%", border: isUnlocked ? "2px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.1)",
                   background: isUnlocked 
                     ? "linear-gradient(135deg, #6D28D9, #4F46E5)" 
-                    : "rgba(255,255,255,0.05)",
-                  color: isUnlocked ? "white" : "rgba(255,255,255,0.3)",
+                    : "rgba(0,0,0,0.2)",
+                  color: isUnlocked ? "white" : "rgba(255,255,255,0.2)",
                   fontSize: isSmall ? 18 : 24, fontWeight: 900,
-                  cursor: "pointer", transition: "all 0.2s",
+                  cursor: isUnlocked ? "pointer" : "not-allowed", transition: "all 0.2s",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   boxShadow: isUnlocked ? "0 4px 15px rgba(109,40,217,0.4)" : "none",
-                  opacity: isUnlocked ? 1 : 0.7,
+                  opacity: isUnlocked ? 1 : 0.6,
+                  position: "relative"
                 }}
                 onMouseEnter={(e) => { if(isUnlocked) e.currentTarget.style.transform = "scale(1.1)"; }}
                 onMouseLeave={(e) => { if(isUnlocked) e.currentTarget.style.transform = "scale(1)"; }}
               >
                 {num}
+                {!isUnlocked && (
+                  <span style={{ 
+                    position: "absolute", bottom: -5, right: -5, 
+                    fontSize: 14, background: "rgba(0,0,0,0.6)", 
+                    borderRadius: "50%", width: 22, height: 22,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>🔒</span>
+                )}
               </button>
             );
           })}
