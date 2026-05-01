@@ -248,7 +248,7 @@ function MergingButterfly({ bf, start1, start2, onDone }) {
 // ─── Level Configuration ───────────────────────────────────────────────────
 const LEVEL_CONFIG = {
   1: { species: 6, time: 120, mode: "none", title: "Score" },
-  2: { species: 7, time: 120, mode: "down", title: "Score" },
+  2: { species: 7, time: 120, mode: "center-h", title: "Score" },
   3: { species: 8, time: 120, mode: "up", title: "Score" },
   4: { species: 9, time: 120, mode: "left", title: "Score" },
   5: { species: 10, time: 120, mode: "right", title: "Score" },
@@ -803,13 +803,13 @@ export default function App() {
 
           if (mode === "down") {
             for (let col = 0; col < COLS; col++) {
-              let writeIdx = ROWS - 1;
+              let writeIdx = ROWS - 2;
               for (let row = ROWS - 1; row >= 0; row--) {
                 if (ng[row][col] && !ng[row][col].gone) {
                   const temp = ng[row][col];
                   ng[row][col] = null;
                   ng[writeIdx][col] = temp;
-                  writeIdx--;
+                  writeIdx = Math.max(1, writeIdx - 1);
                 } else if (ng[row][col] && ng[row][col].gone) {
                   ng[row][col] = null;
                 }
@@ -817,13 +817,13 @@ export default function App() {
             }
           } else if (mode === "up") {
             for (let col = 0; col < COLS; col++) {
-              let writeIdx = 0;
+              let writeIdx = 1;
               for (let row = 0; row < ROWS; row++) {
                 if (ng[row][col] && !ng[row][col].gone) {
                   const temp = ng[row][col];
                   ng[row][col] = null;
                   ng[writeIdx][col] = temp;
-                  writeIdx++;
+                  writeIdx = Math.min(ROWS - 2, writeIdx + 1);
                 } else if (ng[row][col] && ng[row][col].gone) {
                   ng[row][col] = null;
                 }
@@ -831,13 +831,13 @@ export default function App() {
             }
           } else if (mode === "left") {
             for (let row = 0; row < ROWS; row++) {
-              let writeIdx = 0;
+              let writeIdx = 1;
               for (let col = 0; col < COLS; col++) {
                 if (ng[row][col] && !ng[row][col].gone) {
                   const temp = ng[row][col];
                   ng[row][col] = null;
                   ng[row][writeIdx] = temp;
-                  writeIdx++;
+                  writeIdx = Math.min(COLS - 2, writeIdx + 1);
                 } else if (ng[row][col] && ng[row][col].gone) {
                   ng[row][col] = null;
                 }
@@ -845,51 +845,55 @@ export default function App() {
             }
           } else if (mode === "right") {
             for (let row = 0; row < ROWS; row++) {
-              let writeIdx = COLS - 1;
+              let writeIdx = COLS - 2;
               for (let col = COLS - 1; col >= 0; col--) {
                 if (ng[row][col] && !ng[row][col].gone) {
                   const temp = ng[row][col];
                   ng[row][col] = null;
                   ng[row][writeIdx] = temp;
-                  writeIdx--;
+                  writeIdx = Math.max(1, writeIdx - 1);
                 } else if (ng[row][col] && ng[row][col].gone) {
                   ng[row][col] = null;
                 }
               }
             }
           } else if (mode === "split-h") {
-            // Top half Up, Bottom half Down
+            // Top half Up (to row 1), Bottom half Down (to row 6)
             for (let col = 0; col < COLS; col++) {
-              // Top half (rows 0-3)
-              let wIdxTop = 0;
+              // Top half (rows 0-3) -> move towards row 1
+              let wIdxTop = 1;
               for (let r = 0; r < 4; r++) {
                 if (ng[r][col] && !ng[r][col].gone) {
-                  const t = ng[r][col]; ng[r][col] = null; ng[wIdxTop][col] = t; wIdxTop++;
+                  const t = ng[r][col]; ng[r][col] = null; ng[wIdxTop][col] = t;
+                  wIdxTop = Math.min(3, wIdxTop + 1);
                 } else if (ng[r][col]) ng[r][col] = null;
               }
-              // Bottom half (rows 4-7)
-              let wIdxBot = ROWS - 1;
+              // Bottom half (rows 4-7) -> move towards row 6
+              let wIdxBot = ROWS - 2;
               for (let r = ROWS - 1; r >= 4; r--) {
                 if (ng[r][col] && !ng[r][col].gone) {
-                  const t = ng[r][col]; ng[r][col] = null; ng[wIdxBot][col] = t; wIdxBot--;
+                  const t = ng[r][col]; ng[r][col] = null; ng[wIdxBot][col] = t;
+                  wIdxBot = Math.max(4, wIdxBot - 1);
                 } else if (ng[r][col]) ng[r][col] = null;
               }
             }
           } else if (mode === "split-v") {
-            // Left half Left, Right half Right
+            // Left half Left (to col 1), Right half Right (to col 8)
             for (let row = 0; row < ROWS; row++) {
-              // Left half (cols 0-4)
-              let wIdxLeft = 0;
+              // Left half (cols 0-4) -> move towards col 1
+              let wIdxLeft = 1;
               for (let c = 0; c < 5; c++) {
                 if (ng[row][c] && !ng[row][c].gone) {
-                  const t = ng[row][c]; ng[row][c] = null; ng[row][wIdxLeft] = t; wIdxLeft++;
+                  const t = ng[row][c]; ng[row][c] = null; ng[row][wIdxLeft] = t;
+                  wIdxLeft = Math.min(4, wIdxLeft + 1);
                 } else if (ng[row][c]) ng[row][c] = null;
               }
-              // Right half (cols 5-9)
-              let wIdxRight = COLS - 1;
+              // Right half (cols 5-9) -> move towards col 8
+              let wIdxRight = COLS - 2;
               for (let c = COLS - 1; c >= 5; c--) {
                 if (ng[row][c] && !ng[row][c].gone) {
-                  const t = ng[row][c]; ng[row][c] = null; ng[row][wIdxRight] = t; wIdxRight--;
+                  const t = ng[row][c]; ng[row][c] = null; ng[row][wIdxRight] = t;
+                  wIdxRight = Math.max(5, wIdxRight - 1);
                 } else if (ng[row][c]) ng[row][c] = null;
               }
             }
@@ -1056,10 +1060,11 @@ export default function App() {
   );
   if (scene === "levels") return (
     <div style={{
-      width: "100vw", height: "100vh", overflow: "hidden",
+      width: "100vw", height: "100vh", overflowY: "auto",
       background: "transparent",
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       fontFamily: "'Georgia', serif", position: "relative",
+      padding: "40px 0"
     }}>
       <FloatingBg scene="levels" />
       <div style={{ position: "relative", zIndex: 10, textAlign: "center", width: "min(90vw, 600px)", animation: "fadeSlide 0.6s ease" }}>
@@ -1068,50 +1073,55 @@ export default function App() {
           color: "white", marginBottom: 32,
           textShadow: "0 0 20px rgba(150, 120, 255, 0.6)",
         }}>Select Level</h2>
-        
+
         <div style={{
-          display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: isSmall ? 12 : 20,
-          marginBottom: 40
+          display: "grid",
+          gridTemplateColumns: isMini ? "repeat(2, 1fr)" : isSmall ? "repeat(4, 1fr)" : "repeat(5, 1fr)",
+          gap: isSmall ? 16 : 24,
+          marginBottom: 40,
+          justifyItems: "center"
         }}>
           {Object.keys(LEVEL_CONFIG).map(lvl => {
             const num = Number(lvl);
             const isUnlocked = num <= (Number(localStorage.getItem("butterflyLevel")) || 1);
+            const btnSize = isMini ? 64 : isSmall ? 72 : 84;
             return (
               <button
                 key={lvl}
                 onClick={() => isUnlocked && startLevel(num)}
                 style={{
-                  width: isSmall ? 52 : 72, height: isSmall ? 52 : 72,
-                  borderRadius: "50%", border: isUnlocked ? "2px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                  background: isUnlocked 
-                    ? "linear-gradient(135deg, #6D28D9, #4F46E5)" 
-                    : "rgba(0,0,0,0.2)",
+                  width: btnSize, height: btnSize,
+                  borderRadius: "50%",
+                  border: isUnlocked ? "3px solid rgba(255,255,255,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                  background: isUnlocked
+                    ? "linear-gradient(135deg, #6D28D9, #4F46E5)"
+                    : "rgba(255,255,255,0.05)",
                   color: isUnlocked ? "white" : "rgba(255,255,255,0.2)",
-                  fontSize: isSmall ? 18 : 24, fontWeight: 900,
-                  cursor: isUnlocked ? "pointer" : "not-allowed", transition: "all 0.2s",
+                  fontSize: isSmall ? 20 : 28, fontWeight: 900,
+                  cursor: isUnlocked ? "pointer" : "not-allowed", transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: isUnlocked ? "0 4px 15px rgba(109,40,217,0.4)" : "none",
-                  opacity: isUnlocked ? 1 : 0.6,
-                  position: "relative"
+                  boxShadow: isUnlocked ? "0 10px 25px rgba(109,40,217,0.5), inset 0 2px 4px rgba(255,255,255,0.3)" : "none",
+                  opacity: isUnlocked ? 1 : 0.7,
+                  position: "relative",
+                  transform: "scale(1)",
                 }}
-                onMouseEnter={(e) => { if(isUnlocked) e.currentTarget.style.transform = "scale(1.1)"; }}
-                onMouseLeave={(e) => { if(isUnlocked) e.currentTarget.style.transform = "scale(1)"; }}
+                onMouseEnter={(e) => { if (isUnlocked) e.currentTarget.style.transform = "scale(1.15) rotate(5deg)"; }}
+                onMouseLeave={(e) => { if (isUnlocked) e.currentTarget.style.transform = "scale(1) rotate(0deg)"; }}
               >
                 {num}
                 {!isUnlocked && (
-                  <span style={{ 
-                    position: "absolute", bottom: -5, right: -5, 
-                    fontSize: 14, background: "rgba(0,0,0,0.6)", 
-                    borderRadius: "50%", width: 22, height: 22,
-                    display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>🔒</span>
+                  <div style={{
+                    position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)",
+                    borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 24, filter: "grayscale(1)"
+                  }}>🔒</div>
                 )}
               </button>
             );
           })}
         </div>
 
-        <button 
+        <button
           onClick={() => setScene("menu")}
           style={{
             background: "rgba(255,255,255,0.1)", color: "#AAC",
@@ -1168,8 +1178,9 @@ export default function App() {
       width: "100vw", height: "100vh", overflow: "hidden",
       background: "transparent",
       display: "flex", flexDirection: "column", alignItems: "center",
-      justifyContent: isSmall ? "center" : "flex-start",
+      justifyContent: "space-between",
       fontFamily: "'Georgia', serif", userSelect: "none", position: "relative",
+      padding: isSmall ? "5px 0 15px" : "10px 0 20px",
     }}>
       <style>{`
         @keyframes hintPulse{0%,100%{box-shadow:none;transform:scale(1)}50%{box-shadow:0 0 0 4px #FFD700,0 0 20px #FFD70080;transform:scale(1.15)}}
@@ -1298,23 +1309,28 @@ export default function App() {
 
       <div style={{
         position: "relative", zIndex: 10,
-        background: "rgba(80,60,150,0.45)",
-        border: "2px solid rgba(150,120,255,0.35)",
-        borderRadius: 14, padding: isSmall ? 10 : 6,
-        boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)",
-        overflow: "hidden",
-        maxWidth: "min(100vw, 800px)", width: "100%",
+        flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+        width: "100%", padding: "0 10px",
       }}>
-        <PathCanvas path={activePath} gridRef={gridRef} />
+        <div style={{
+          position: "relative",
+          background: "rgba(80,60,150,0.45)",
+          border: "2px solid rgba(150,120,255,0.35)",
+          borderRadius: 14, padding: isSmall ? 8 : 12,
+          boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)",
+          overflow: "hidden",
+          maxWidth: "min(100vw, 800px)", width: "100%",
+        }}>
+          <PathCanvas path={activePath} gridRef={gridRef} />
 
-        <div
-          ref={gridRef}
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${COLS}, 1fr)`,
-            gap: 3,
-          }}
-        >
+          <div
+            ref={gridRef}
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${COLS}, 1fr)`,
+              gap: 2,
+            }}
+          >
           {grid.map((row, r) =>
             row.map((cell, c) => {
               if (!cell) {
@@ -1369,7 +1385,7 @@ export default function App() {
                   {!cell.gone && (
                     <ButterflyIcon
                       bf={bf}
-                      size={Math.min(isSmall ? 32 : 52, Math.floor((windowWidth - (isSmall ? 60 : 140)) / COLS))}
+                      size={Math.min(isSmall ? 32 : 52, Math.floor((windowWidth - (isSmall ? 60 : 140)) / COLS), Math.floor((windowHeight - (isSmall ? 200 : 300)) / ROWS))}
                       flap={isSelected} // ONLY flap when selected for better performance
                       selected={isSelected}
                       delay={((r + c) % 4) * 0.15}
@@ -1381,20 +1397,18 @@ export default function App() {
           )}
         </div>
       </div>
+    </div>
 
       {/* Bottom nav / Footer */}
       <div style={{
-        position: isSmall ? "fixed" : "relative",
-        bottom: isSmall ? "clamp(10px, 4vh, 30px)" : "auto",
+        position: "relative",
         zIndex: 100,
-        marginTop: isSmall ? 0 : 8,
         display: "flex", gap: 12, alignItems: "center",
-        background: "transparent",
-        padding: isSmall ? "10px 24px" : 0,
-        borderRadius: isSmall ? 40 : 0,
-        border: "none",
-        backdropFilter: "none",
-        boxShadow: "none",
+        background: "rgba(0,0,0,0.3)",
+        padding: "10px 24px",
+        borderRadius: 40,
+        border: "1px solid rgba(255,255,255,0.1)",
+        backdropFilter: "blur(4px)",
       }}>
         <button onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setScene("menu"); }} style={{
           background: "rgba(255,255,255,0.15)", color: "white",
